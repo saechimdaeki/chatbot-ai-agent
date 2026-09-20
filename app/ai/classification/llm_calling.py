@@ -2,13 +2,14 @@ import os
 from openai import OpenAI
 from .classification_list import TOOLS
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Ollama의 OpenAI 호환 엔드포인트(/v1) 사용. api_key는 필수값이라 더미값
+client = OpenAI(base_url=f"{os.getenv('OLLAMA_HOST')}/v1", api_key="ollama")
+MODEL = os.getenv("OLLAMA_MODEL")
 
 
 def classify_message(message: str) -> str:
     response = client.chat.completions.create(
-        # temperature는 분류 작업에 맞는 낮은 값으로 설정. 기본값은 1
-        model="gpt-4.1-mini",
+        model=MODEL,
         messages=[{"role": "user", "content": message}],
         tools=TOOLS,
         tool_choice="auto",
@@ -21,7 +22,7 @@ def classify_message(message: str) -> str:
 
 def generate_response(user_message: str, data: str) -> str:
     response = client.chat.completions.create(
-        model="gpt-4.1-mini",
+        model=MODEL,
         messages=[
             {
                 "role": "system",

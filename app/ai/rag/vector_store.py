@@ -1,5 +1,5 @@
 import os
-from langchain_openai import OpenAIEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_postgres import PGVector
 
 # langchain_postgres는 psycopg3 드라이버 사용 (postgresql+psycopg://)
@@ -7,14 +7,12 @@ _DATABASE_URL = os.getenv("DATABASE_URL", "").replace(
     "postgresql://", "postgresql+psycopg://"
 )
 
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-large",
-    api_key=os.getenv("OPENAI_API_KEY"),
+embeddings = OllamaEmbeddings(
+    # 임베딩은 채팅 서버와 분리 가능 (미지정 시 OLLAMA_HOST/OLLAMA_MODEL 사용)
+    model=os.getenv("OLLAMA_EMBED_MODEL", os.getenv("OLLAMA_MODEL")),
+    base_url=os.getenv("OLLAMA_EMBED_HOST", os.getenv("OLLAMA_HOST")),
 )
 
-# PGVector객체가 만들어지는 시점에 아래 테이블2개가 자동으로 생성
-# langchain_pg_collection(컬렉션 목록 테이블), langchain_pg_embedding(실제 데이터 테이블)  
-# langchain_pg_embedding : id, collection_id, embedding(vector), document(text) 컬럼으로 구성
     
 vector_store = PGVector(
     embeddings=embeddings,
