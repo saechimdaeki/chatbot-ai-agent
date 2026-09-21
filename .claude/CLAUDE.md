@@ -87,7 +87,7 @@ No test suite exists.
 - `app/ai/sllm_pinetunning/pinetunning/` — offline LoRA pipeline for llama3.2:3b; own `requirements.txt`, GPU only, not part of the app venv
 
 ### Env (.env, gitignored)
-`DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `OLLAMA_HOST`, `OLLAMA_MODEL`, `OLLAMA_EMBED_HOST`, `OLLAMA_EMBED_MODEL`, `USE_SEMANTIC_CACHE`, `REDIS_HOST`/`REDIS_PORT` (default localhost:6379)
+`DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `OLLAMA_HOST`, `OLLAMA_MODEL`, `OLLAMA_EMBED_HOST`, `OLLAMA_EMBED_MODEL`, `OLLAMA_FALLBACK_HOST`, `OLLAMA_FALLBACK_MODEL` (GPU 노드 장애 시 폴백), `USE_SEMANTIC_CACHE`, `REDIS_HOST`/`REDIS_PORT` (default localhost:6379)
 
 ### Gotchas
 - Three Ollama endpoints: `OLLAMA_HOST` (chat/classify), `OLLAMA_EMBED_HOST` (embeddings), and a hardcoded `localhost:11434` `llama3.2:3b` for the sLLM path (`/chats/tunning`, profile handler).

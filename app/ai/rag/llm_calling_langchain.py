@@ -1,22 +1,31 @@
 import os
+import httpx
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from app.ai.classification.classification_list import TOOLS
 
-llm_classify = ChatOllama(
-    model=os.getenv("OLLAMA_MODEL"),
-    base_url=os.getenv("OLLAMA_HOST"),
-    temperature=0
-)
+def _llm(temperature: float) -> ChatOllama:
+    return ChatOllama(
+        model=os.getenv("OLLAMA_MODEL"),
+        base_url=os.getenv("OLLAMA_HOST"),
+        temperature=temperature,
+        # 연결 타임아웃이 없으면 GPU 노드가 죽었을 때 OS 기본값(수십 초)까지 대기
+        client_kwargs={"timeout": httpx.Timeout(None, connect=5)},
+    )
 
-llm_response = ChatOllama(
-    model=os.getenv("OLLAMA_MODEL"),
-    base_url=os.getenv("OLLAMA_HOST"),
-    temperature=0.3
-)
 
-llm_with_tools = llm_classify.bind_tools(TOOLS)
+def _fallback_llm(temperature: float) -> ChatOllama:
+    return ChatOllama(
+        model=os.getenv("OLLAMA_FALLBACK_MODEL"),
+        base_url=os.getenv("OLLAMA_FALLBACK_HOST"),
+        temperature=temperature,
+    )
+
+
+# 메인 GPU 노드 실패 시 폴백 서버로 자동 전환
+llm_response = _llm(0.3).with_fallbacks([_fallback_llm(0.3)])
+llm_with_tools = _llm(0).bind_tools(TOOLS).with_fallbacks([_fallback_llm(0).bind_tools(TOOLS)])
 
 
 def classify_message_langchain(message: str) -> str:
