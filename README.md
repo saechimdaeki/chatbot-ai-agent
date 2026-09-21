@@ -1,2 +1,86 @@
-# chatbot-ai-agent
-챗봇을 만들며 배우는 ai agent 개발의 모든것(fastapi, RAG, vector, LangChain, sLLM/파인튜닝)
+## 기능
+
+- 회원(member)
+  - 회원가입(email, password)
+  - 로그인 / 토큰 발급
+  - 마이페이지 조회
+- 상품(product)
+  - 상품 등록(상품명, 카테고리, 가격, 재고수량, 등록자(member_id))
+  - 상품 목록 검색(name, category)
+  - 상품 상세 조회
+- 주문(order)
+  - 주문 생성(주문자id, 상품id, 주문개수)
+  - 나의 주문 내역 조회
+- 챗봇(chat)
+  - 챗봇 질의(message)
+- 문서(document)
+  - 문장 vectorDB 저장/조회/수정
+
+## 실행
+
+LLM은 OpenAI 대신 Ollama를 사용
+
+- 채팅/분류 : 원격 Ollama 서버의 `ornith:35b` (tool calling 지원 필요)
+- 임베딩 : 로컬 Ollama의 `bge-m3` (임베딩 전용이라 채팅 불가, 1024차원)
+
+1. 가상환경 생성 및 패키지 설치
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+2. 로컬 Ollama에 임베딩 모델 받기
+
+```bash
+ollama pull bge-m3
+```
+
+3. `.env` 작성 (git에 올라가지 않음)
+
+```
+DATABASE_URL=postgresql://myuser:mysecretpassword@localhost:5432/ai_agent_db
+SECRET_KEY=your-secret-key-change-this-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=3000
+OLLAMA_HOST=http://10.84.104.36:443       # 채팅 모델 서버
+OLLAMA_MODEL=ornith:35b
+OLLAMA_EMBED_HOST=http://localhost:11434  # 임베딩 서버 (생략 시 OLLAMA_HOST)
+OLLAMA_EMBED_MODEL=bge-m3                 # 생략 시 OLLAMA_MODEL
+USE_SEMANTIC_CACHE=false
+```
+
+> 임베딩 모델을 바꾸면 벡터 차원이 달라지므로 vectorDB 문서를 다시 넣어야 함
+
+4. 서버 실행
+
+```bash
+uvicorn app.main:app --reload
+```
+
+## 요청 분류 및 응답
+
+- 일반질문
+  - 로그인한 사용자 본인의 주문 내역을 조회, 예를 들어 '내 주문', '주문 내역', '내가 주문한 것' 등의 요청이 있다면 -> get_my_orders
+  - 서버에서 제공하는 api를 조회한 후 llm을 통해 자연어 응답
+- 비구조화된질문
+  - '환불정책”', '교환문의', '배송'에 대한 질문이라면 -> get_policy
+  - rag를 통해 검색 llm을 통한 응답. 유사도가 낮은 답변밖에 없다면 "적절한 정책이 없습니다."
+- 민감질문
+  - 사용자 본인의 회원정보(이름, 이메일 등)를 조회, 예를 들어 '내 정보', '마이페이지', '내 계정' 등의 요청이 있다면 -> get_my_profile
+  - 서버에서 제공하는 api를 조회한 후 sllm을 통해 자연어 응답
+- 그외에 질문 -> "답변이 어려운 질문입니다."
+
+## 고도화(문서 관리, 대화, 토큰 비용, 검색)
+
+- 문서 관리 : 문장 목록 조회를 통해 문장수정 api를 통해 문장 덮어쓰기
+- 직전 문맥까지 고려한 history 관리를 통해 이전대화 고려한 대화
+- redis stack과 캐싱작업을 통해 같은 질문 토큰 최소화
+- 하이브리드 검색 : dense + sparse 를 통한 대규모 코퍼스에서의 검색효율향상
+
+## sLLM과 파인튜닝
+
+- 사용자 질의 분류 작업으로 sLLM 도입(llama3.2)
+- sLLM의 효과적 사용을 위해 lora 튜닝
+- 튜닝작업 및 실행의 경우 성능문제로 runpod환경에서 gpu PC로 진행
