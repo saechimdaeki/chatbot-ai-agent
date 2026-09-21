@@ -21,7 +21,6 @@ def sllm_classifier(user_message: str) -> str:
     response.raise_for_status()
     raw = response.json()["response"].strip()
     print(raw)
-    # 후처리: 유효한 레이블 포함 여부 확인
     for label in VALID_LABELS:
         if label in raw:
             return label

@@ -24,16 +24,12 @@ def create_chat(
     db: Session = Depends(get_db),
     current_member: models.Member = Depends(get_current_member),
 ):
-    # 같은질문에 대한 캐싱 : redis stack에 같은 질문이 이력이 있는지 검색
     cached_response = semantic_cache.search(body.message, current_member.id)
-    # 히트 시: redis에 저장된 값으로 즉시 응답
-    # 미스 시: 아래 else 분기 처리로 진행
     if cached_response:
         response_text = cached_response
 
     else:
         action = classify_message(body.message)
-        # action = classify_message_langchain(body.message)
         print(action)
         if action == "get_my_orders":
             orders = my_orders(db=db, current_member=current_member)
@@ -41,7 +37,6 @@ def create_chat(
             data = _format_orders(orders)
             print(data)
             response_text = generate_response(body.message, data)
-            # response_text = generate_response_langchain(body.message, data)
         # 민감정보의 경우 sLLM을 통해 응답생성
         elif action == "get_my_profile":
             member = my_page(current_member=current_member)
@@ -51,13 +46,8 @@ def create_chat(
             response_text = generate_response_sllm(body.message, data)
         else:
             context = search_policy(body.message)
-            # response_text = generate_response(body.message, context)
             response_text = generate_response_langchain(body.message, context)
-            # # 최근대화고려 작업(Window Memory): 응답시 최근 5턴 대화 기록을 함께 전달
-            # history = load_chat_history(current_member.id, db)
-            # response_text = generate_response_langchain_memory(body.message, context, history)
 
-        # redis stack에 질문/응답을 저장
         # store: member_id 포함 (flush_by_member로 사용자별 선택 삭제 가능)
         semantic_cache.store(body.message, response_text, current_member.id)
 
@@ -90,9 +80,6 @@ def _format_profile(member: list) -> str:
     return f"- 회원번호: {member.id} / email: {member.email} / 회원명: {member.name} / age: {member.age} "
 
 
-
-
-
 from app.ai.sllm_pinetunning.sllm_classification import sllm_classifier
 @router.post("/tunning")
 def create_chat_tunning(
@@ -100,7 +87,6 @@ def create_chat_tunning(
     db: Session = Depends(get_db),
     current_member: models.Member = Depends(get_current_member),
 ):
-    # tunning 분류기
     action = sllm_classifier(body.message)
     print(action)
     return {"action": action}

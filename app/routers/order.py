@@ -27,7 +27,6 @@ def create_order(
     db.commit()
     db.refresh(order)
 
-    # 주문 발생 시 해당 사용자의 캐시만 삭제
     semantic_cache.flush_by_member(current_member.id)
 
     return order

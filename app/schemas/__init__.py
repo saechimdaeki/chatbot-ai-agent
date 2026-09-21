@@ -3,7 +3,6 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
-# Member
 class MemberCreate(BaseModel):
     email: EmailStr
     password: str
@@ -31,7 +30,6 @@ class TokenResponse(BaseModel):
     access_token: str
 
 
-# Product
 class ProductCreate(BaseModel):
     name: str
     category: str
@@ -52,7 +50,6 @@ class ProductResponse(BaseModel):
         from_attributes = True
 
 
-# Order
 class OrderCreate(BaseModel):
     product_id: int
     quantity: int
@@ -69,7 +66,6 @@ class OrderResponse(BaseModel):
         from_attributes = True
 
 
-# Chat
 class ChatRequest(BaseModel):
     message: str
 
@@ -85,7 +81,6 @@ class ChatResponse(BaseModel):
         from_attributes = True
 
 
-# Document
 class DocumentCreate(BaseModel):
     texts: list[str]
 
@@ -94,7 +89,7 @@ class DocumentResponse(BaseModel):
 
 class DocumentChunk(BaseModel):
     id: str       # langchain_pg_embedding의 UUID
-    content: str  # 청크 텍스트 내용
+    content: str
 
 class DocumentChunkUpdate(BaseModel):
     text: str     # 수정할 새 텍스트 (기존 청크를 삭제하고 재임베딩 후 저장)

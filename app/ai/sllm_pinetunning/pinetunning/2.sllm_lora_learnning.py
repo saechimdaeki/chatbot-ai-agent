@@ -7,7 +7,6 @@ from peft import LoraConfig, PeftModel
 from trl import SFTTrainer, SFTConfig
 from huggingface_hub import login
 
-# 0. 기본 환경 설정
 MODEL_ID = "meta-llama/Llama-3.2-3B-Instruct"
 DATA_PATH = "train_classification.jsonl"
 
@@ -21,11 +20,9 @@ if DEVICE == "cpu":
 # GPU는 bfloat16 연산을 하드웨어에서 직접 지원하기 때문에 빠르고 메모리도 절약
 DTYPE = torch.bfloat16 if DEVICE == "cuda" else torch.float32
 # CPU환경일때, 스레드 수 제한
-# CPU가 1코어면 min(8, 1) → 1이 되는 거고, 만약 16코어면 min(8, 16) → 8로 제한
 torch.set_num_threads(max(1, min(8, os.cpu_count() or 1)))
 
 
-# 1. HF 로그인
 def hf_login():
     hf_token = os.getenv("HF_TOKEN")
     if hf_token:
@@ -34,7 +31,6 @@ def hf_login():
     else:
         print("[WARN] failed")
 
-# 2-1). 모델 / 토크나이저 로드 : 텍스트를 모델이 이해할 수 있는 숫자(토큰 ID)로 변환하는 도구
 def load_tokenizer():
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, use_fast=True)
 
@@ -46,7 +42,6 @@ def load_tokenizer():
     return tokenizer
 
 
-# 2-2). 기본 모델 불러오기
 def load_base_model():
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
@@ -60,7 +55,6 @@ def load_base_model():
 
     return model
 
-# 2-3) 데이터 전처리 : 원본 컬럼(instruction, response) 제거 및 구조 변경
 def load_and_prepare_dataset(tokenizer):
     dataset = load_dataset("json", data_files=DATA_PATH)["train"]
     dataset = dataset.map(
@@ -82,7 +76,6 @@ def build_text(example, tokenizer):
     )
     return {"text": text}
 
-# 2. LoRA 학습
 def train_lora():
     print("[INFO] Loading tokenizer...")
     tokenizer = load_tokenizer()
@@ -93,9 +86,7 @@ def train_lora():
     print("[INFO] Loading dataset...")
     dataset = load_and_prepare_dataset(tokenizer)
 
-    # 아래 LoraConfig와 SFTConfig는 대표적인 하이퍼파라미터(모델학습을 위해 개발자가 지정하는 값)
 
-    # 어디(레이어)를 학습시킬지에 대한 설정
     lora_config = LoraConfig(
         r=32,               
         lora_alpha=128,     
@@ -105,13 +96,12 @@ def train_lora():
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
     )
 
-    # 어느정도(얼마나)로, 어떤 방식으로 학습할지
     sft_config = SFTConfig(
         output_dir=ADAPTER_DIR,
-        num_train_epochs=10,  #몇 번 반복해서 학습할지 결정
+        num_train_epochs=10,
         per_device_train_batch_size=4,
         gradient_accumulation_steps=4,
-        max_length=512, #입력데이터 최대 길이
+        max_length=512,
         fp16=False,
         bf16=True,   # A4500 (Ampere 아키텍처)은 bf16 지원
         dataloader_num_workers=4,   
@@ -139,20 +129,17 @@ def train_lora():
     trainer.train()
 
     print(" Saving LoRA adapter...")
-    # LoRA 어댑터 가중치 저장
     trainer.model.save_pretrained(ADAPTER_DIR)
     # 토크나이저 설정 저장 : 어뎁터를 다시 불러다 쓸때 같은 토크나이저 필요
     tokenizer.save_pretrained(ADAPTER_DIR)
 
     print(f"[OK] adapter saved to: {ADAPTER_DIR}")
 
-    # 메모리 정리
     del trainer
     del model
     gc.collect()
 
 
-# 6. LoRA 병합
 def merge_lora_to_base():
     print("Loading base model for merge...")
     base_model = AutoModelForCausalLM.from_pretrained(
@@ -182,13 +169,11 @@ def merge_lora_to_base():
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.save_pretrained(MERGED_DIR)
 
-    # 메모리 정리
     del base_model
     del peft_model
     del merged_model
     gc.collect()
 
-# 0. 메인
 def main():
     hf_login()
     train_lora()

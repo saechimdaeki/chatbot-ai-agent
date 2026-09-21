@@ -265,7 +265,6 @@ examples = [
 ]
 
 
-# 데이터 양 불리기
 augmented = []
 for i in range(3):  # 약 250 * 3 = 750 samples
     for ex in examples:
