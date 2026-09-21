@@ -68,7 +68,7 @@ def _format_orders(orders: list) -> str:
     if not orders:
         return "주문 내역이 없습니다."
     lines = [
-        f"- 주문번호: {o.id} / 상품ID: {o.product_id} / 수량: {o.quantity} / 주문일: {o.created_at.strftime('%Y-%m-%d')}"
+        f"- 주문번호: {o.id} / 상품명: {o.product.name} / 수량: {o.quantity} / 주문일: {o.created_at.strftime('%Y-%m-%d')}"
         for o in orders
     ]
     return "\n".join(lines)
