@@ -17,41 +17,44 @@ router = APIRouter(prefix="/chats", tags=["chat"])
 
 
 @router.post("", response_model=schemas.ChatResponse, status_code=status.HTTP_201_CREATED)
-# 요청 1건 = trace 1개로 분류/검색/응답 호출을 묶음. db 세션 등 직렬화 불가 인자라 입출력 캡처는 끔
-@observe(name="chat", capture_input=False, capture_output=False)
 def create_chat(
     body: schemas.ChatRequest,
     db: Session = Depends(get_db),
     current_member: models.Member = Depends(get_current_member),
 ):
-    cached_response = semantic_cache.search(body.message, current_member.id)
-    if cached_response:
-        response_text = cached_response
+    # 엔드포인트에 바로 @observe를 걸면 db 세션/회원 ORM(비밀번호 해시 포함)까지 캡처됨
+    # → 질문(str) → 응답(str)만 받는 내부 함수로 감싸 자동 캡처가 깔끔하게 남도록 함
+    @observe(name="chat")
+    def answer(message: str) -> str:
+        cached_response = semantic_cache.search(message, current_member.id)
+        if cached_response:
+            return cached_response
 
-    else:
-        action = classify_message(body.message)
+        action = classify_message(message)
         print(action)
         if action == "get_my_orders":
             orders = my_orders(db=db, current_member=current_member)
             print(orders)
             data = _format_orders(orders)
             print(data)
-            response_text = generate_response(body.message, data)
+            response_text = generate_response(message, data)
         # 민감정보의 경우 sLLM을 통해 응답생성
         elif action == "get_my_profile":
             member = my_page(current_member=current_member)
             print(member)
             data = _format_profile(member)
             print(data)
-            response_text = generate_response_sllm(body.message, data)
+            response_text = generate_response_sllm(message, data)
         else:
-            context = search_policy(body.message)
+            context = search_policy(message)
             history = load_chat_history(current_member.id, db)
-            response_text = generate_response_langchain_memory(body.message, context, history)
+            response_text = generate_response_langchain_memory(message, context, history)
 
         # store: member_id 포함 (flush_by_member로 사용자별 선택 삭제 가능)
-        semantic_cache.store(body.message, response_text, current_member.id)
+        semantic_cache.store(message, response_text, current_member.id)
+        return response_text
 
+    response_text = answer(body.message)
 
     chat_record = models.Chat(
         member_id=current_member.id,
