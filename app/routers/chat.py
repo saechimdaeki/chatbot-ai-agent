@@ -2,18 +2,14 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app import models, schemas
-from app.dependencies import get_db, get_current_member
 from app.ai.classification.llm_calling import classify_message, generate_response
-from app.ai.rag.retriever import search_policy
-from app.ai.rag.llm_calling_langchain import classify_message_langchain
-from app.ai.rag.llm_calling_langchain import generate_response_langchain_memory
 from app.ai.rag.llm_calling_langchain import generate_response_langchain
-from app.ai.rag.memory import load_chat_history
-from app.routers.order import my_orders
-from app.routers.member import my_page
-
+from app.ai.rag.retriever import search_policy
 from app.ai.rag.semantic_cache import semantic_cache
 from app.ai.sllm_pinetunning.sllm_model_request import generate_response_sllm
+from app.dependencies import get_db, get_current_member
+from app.routers.member import my_page
+from app.routers.order import my_orders
 
 router = APIRouter(prefix="/chats", tags=["chat"])
 

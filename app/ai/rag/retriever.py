@@ -1,5 +1,7 @@
-from sqlalchemy import text
+from __future__ import annotations
+
 from langchain_community.retrievers import BM25Retriever
+from sqlalchemy import text
 
 from app.database import engine
 from .vector_store import vector_store

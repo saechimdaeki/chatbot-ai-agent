@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import os
 import uuid
 
-import redis
 import numpy as np
+import redis
 from redis.commands.search.field import VectorField, TextField, TagField
 from redis.commands.search.index_definition import IndexDefinition, IndexType
 from redis.commands.search.query import Query

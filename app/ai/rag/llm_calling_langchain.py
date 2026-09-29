@@ -10,7 +10,7 @@ def _llm(temperature: float) -> ChatOllama:
         model=os.getenv("OLLAMA_MODEL"),
         base_url=os.getenv("OLLAMA_HOST"),
         temperature=temperature,
-        # 연결 타임아웃이 없으면 GPU 노드가 죽었을 때 OS 기본값(수십 초)까지 대기
+        # 연결 타임아웃이 없으면 GPU 노드가 죽었을 때 OS 기본값(수십 초)까지 대기,, 흙수저...
         client_kwargs={"timeout": httpx.Timeout(None, connect=5)},
     )
 

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import text as sql_text
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from app.ai.rag.semantic_cache import semantic_cache
+from sqlalchemy import text as sql_text
+from sqlalchemy.orm import Session
 
 from app import schemas
-from app.dependencies import get_db
+from app.ai.rag.semantic_cache import semantic_cache
 from app.ai.rag.vector_store import vector_store
+from app.dependencies import get_db
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
