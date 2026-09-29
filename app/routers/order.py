@@ -1,10 +1,11 @@
 from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app import models, schemas
-from app.dependencies import get_db, get_current_member
 from app.ai.rag.semantic_cache import semantic_cache
+from app.dependencies import get_db, get_current_member
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
