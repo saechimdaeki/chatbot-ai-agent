@@ -3,7 +3,10 @@ import httpx
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
+from langfuse.langchain import CallbackHandler
 from app.ai.classification.classification_list import TOOLS
+
+langfuse_handler = CallbackHandler()
 
 def _llm(temperature: float) -> ChatOllama:
     return ChatOllama(
@@ -24,8 +27,8 @@ def _fallback_llm(temperature: float) -> ChatOllama:
 
 
 # 메인 GPU 노드 실패 시 폴백 서버로 자동 전환
-llm_response = _llm(0.3).with_fallbacks([_fallback_llm(0.3)])
-llm_with_tools = _llm(0).bind_tools(TOOLS).with_fallbacks([_fallback_llm(0).bind_tools(TOOLS)])
+llm_response = _llm(0.3).with_fallbacks([_fallback_llm(0.3)]).with_config(callbacks=[langfuse_handler])
+llm_with_tools = _llm(0).bind_tools(TOOLS).with_fallbacks([_fallback_llm(0).bind_tools(TOOLS)]).with_config(callbacks=[langfuse_handler])
 
 
 def classify_message_langchain(message: str) -> str:

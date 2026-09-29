@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status
+from langfuse import observe
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -16,6 +17,8 @@ router = APIRouter(prefix="/chats", tags=["chat"])
 
 
 @router.post("", response_model=schemas.ChatResponse, status_code=status.HTTP_201_CREATED)
+# 요청 1건 = trace 1개로 분류/검색/응답 호출을 묶음. db 세션 등 직렬화 불가 인자라 입출력 캡처는 끔
+@observe(name="chat", capture_input=False, capture_output=False)
 def create_chat(
     body: schemas.ChatRequest,
     db: Session = Depends(get_db),

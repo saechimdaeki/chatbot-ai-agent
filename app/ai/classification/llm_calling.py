@@ -1,6 +1,7 @@
 import os
 
-from openai import OpenAI, APIConnectionError
+from langfuse.openai import OpenAI  # openai SDK 드롭인, 호출이 Langfuse에 자동 기록
+from openai import APIConnectionError
 
 from .classification_list import TOOLS
 

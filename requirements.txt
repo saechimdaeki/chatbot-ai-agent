@@ -17,6 +17,7 @@ langchain-postgres # LangChain + PostgreSQL vector store
 langchain-text-splitters # LangChain chunking utility
 langchain-community # BM25Retriever 
 rank-bm25 # BM25 algorithm (langchain-community BM25Retriever related)
+langfuse # LLM tracing (self-hosted, compose.yaml)
 notion-client # Notion API client
 
 # Redis cache

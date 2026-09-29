@@ -1,6 +1,9 @@
 import requests
+from langfuse import observe
 
 
+# requests 직접 호출이라 자동 추적이 안 돼서 데코레이터로 기록 (Langfuse 로컬이라 민감정보 외부 유출 없음)
+@observe(name="sllm", as_type="generation")
 def generate_response_sllm(user_message: str, data: str) -> str:
     prompt = (
         "사용자의 질문에 대해 아래 참고 데이터를 바탕으로 사용자의 질문에 답변해. "
