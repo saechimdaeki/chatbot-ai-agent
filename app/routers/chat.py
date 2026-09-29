@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.ai.classification.llm_calling import classify_message, generate_response
-from app.ai.rag.llm_calling_langchain import generate_response_langchain
+from app.ai.rag.llm_calling_langchain import generate_response_langchain, generate_response_langchain_memory
+from app.ai.rag.memory import load_chat_history
 from app.ai.rag.retriever import search_policy
 from app.ai.rag.semantic_cache import semantic_cache
 from app.ai.sllm_pinetunning.sllm_model_request import generate_response_sllm
@@ -42,7 +43,8 @@ def create_chat(
             response_text = generate_response_sllm(body.message, data)
         else:
             context = search_policy(body.message)
-            response_text = generate_response_langchain(body.message, context)
+            history = load_chat_history(current_member.id, db)
+            response_text = generate_response_langchain_memory(body.message, context, history)
 
         # store: member_id 포함 (flush_by_member로 사용자별 선택 삭제 가능)
         semantic_cache.store(body.message, response_text, current_member.id)
