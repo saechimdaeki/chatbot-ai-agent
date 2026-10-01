@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class MemberCreate(BaseModel):
@@ -31,10 +31,10 @@ class TokenResponse(BaseModel):
 
 
 class ProductCreate(BaseModel):
-    name: str
-    category: str
-    price: float
-    stock: int
+    name: str = Field(min_length=1, max_length=200)
+    category: str = Field(min_length=1, max_length=100)
+    price: float = Field(ge=0, allow_inf_nan=False)
+    stock: int = Field(ge=0)
 
 
 class ProductResponse(BaseModel):
@@ -52,7 +52,7 @@ class ProductResponse(BaseModel):
 
 class OrderCreate(BaseModel):
     product_id: int
-    quantity: int
+    quantity: int = Field(gt=0)
 
 
 class OrderResponse(BaseModel):

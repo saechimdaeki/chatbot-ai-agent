@@ -16,7 +16,12 @@ def create_order(
     db: Session = Depends(get_db),
     current_member: models.Member = Depends(get_current_member),
 ):
-    product = db.query(models.Product).filter(models.Product.id == body.product_id).first()
+    product = (
+        db.query(models.Product)
+        .filter(models.Product.id == body.product_id)
+        .with_for_update()
+        .first()
+    )
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     if product.stock < body.quantity:

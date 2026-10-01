@@ -49,13 +49,12 @@ def generate_response_langchain(user_message: str, data: str) -> str:
 
 
 def generate_response_langchain_memory(user_message: str, data: str, history: list = None) -> str:
-    print(f"generate_response memory back data {history}")
     prompt = ChatPromptTemplate.from_messages([
         (
             "system",
             "사용자의 질문에 대해 아래 참고 데이터를 바탕으로 사용자의 질문에 답변해. "
-            "이전 대화에서 답할 수 있는 내용이 있으면 그것을 우선으로 사용해."
-            "만약 참고 데이터와 이전 대화 모두에서 관련 내용을 찾을 수 없는 경우에만 응답불가합니다 라고 답변해.\n\n"
+            "현재 참고 데이터를 우선 사용해. 이전 대화는 질문의 지시 대상을 이해하는 데만 사용하고, 과거 회원 정보나 AI 답변을 사실의 근거로 삼지 마."
+            "관련 근거가 없으면 확인할 수 없다고 설명하고 필요한 정보를 되물어. 정책이나 기능을 만들어내지 마. 해요체로 답변해.\n\n"
             "[참고 데이터]\n{data}"
         ),
         MessagesPlaceholder(variable_name="history"),

@@ -2,6 +2,14 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "get_service_help",
+            "description": "서비스 사용법, 상품 주문·구매 방법, 상품 검색·등록 방법, 로그인·회원가입, 문서 관리 방법을 안내합니다. 주문하는 방법은 주문 내역 조회나 배송·환불 정책과 다릅니다.",
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_my_orders",
             "description": "로그인한 사용자 본인의 주문 내역을 조회합니다. '내 주문', '주문 내역', '내가 주문한 것' 등의 요청에 사용합니다.",
             "parameters": {"type": "object", "properties": {}},
